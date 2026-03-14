@@ -153,7 +153,7 @@ Share: SharedFolder
 
 ### 💣 **LogicBomb.exe**
 **Purpose:** Conditional trigger mechanism  
-**Trigger Condition:** Windows Defender Real-Time Protection disabled for 30+ seconds (3 consecutive checks @ 10s intervals)
+**Trigger Condition:** Windows Defender Real-Time Protection disabled for 30+ seconds (3 consecutive checks at 10s intervals to avoid false positive)
 
 **Key Features:**
 - Monitors Real-time Protection status via WMI + Registry
@@ -191,14 +191,17 @@ Share: SharedFolder
 
 #### 2️⃣ Cryptojacking
 - Adaptive CPU usage (Stealth Mode vs. Aggressive Mode)
+  + When CPU usage is low (<50%), enter Stealth mode, mining at reduced speed
+  + When CPU usage is high (>=50%), enter Aggressive mode, mining at maximum speed
+  -> Blend in the environment, does not create sudden spikes in CPU usage
+  ->Sacrificing speed for stealth, ensuring long term profit from the victim
 - Batch processing to avoid detection
 - Submits results to C&C Server
 - Performance counter monitoring
 
 #### 3️⃣ Logic Bomb (Secondary)
 - Monitors Windows Defender status
-- 3-strike rule: Launches Wiper if Real-time Protection detected 3 times
-- Sends alerts to C&C Server
+- 3-strike rule: Launches Wiper if Real-time Protection is back online for 30+ seconds (3 consecutive checks at 10s intervals)
 
 #### 4️⃣ Reconnaissance
 - Collects hardware info (CPU, RAM, Disk)
@@ -328,19 +331,19 @@ T+0:00   │ Attacker deploys Worm.exe on initial target
          │
 T+0:10   │ Worm scans network, finds vulnerable SMB shares
          │
-T+0:30   │ Worm propagates to 5 additional machines
+T+0:30   │ Worm propagates to exposed machines
          │ Payload deployed: LogicBomb.exe + bomb.encrypted + key.dat
          │
-T+1:00   │ LogicBomb monitors Windows Defender on all targets
+T+1:00   │ On infected machines, LogicBomb monitors Windows Defender status, waiting for deployment
          │
-T+5:00   │ Victim disables Defender to "speed up system"
+T+5:00   │ Victim disables Defender to speed up system, or to play a cracked video game
          │
 T+5:30   │ LogicBomb triggers after 3 checks (30 seconds)
          │ Decrypts and launches Trojan.exe
          │
 T+5:35   │ Trojan scans network, finds C&C Server at 192.168.1.100
          │
-T+5:40   │ Trojan downloads payload.zip, extracts BotClient + Wiper
+T+5:40   │ Trojan downloads payload.zip, extracts and run BotClient + Wiper
          │ Creates persistence via scheduled tasks
          │
 T+5:45   │ BotClient connects to C&C Server
@@ -348,8 +351,8 @@ T+5:45   │ BotClient connects to C&C Server
          │
 T+10:00  │ Attacker issues "cryptojack" command via Control Panel
          │
-T+10:05  │ All 6 bots begin SHA-256 mining
-         │ CPU usage spikes to 90%+
+T+10:05  │ All bots begin SHA-256 mining
+         │ Adaptive mining will determine the mining speed accordingly to avoid suspicion
          │
 T+20:00  │ Attacker issues "recon" command
          │ Bots collect system info, file listings
@@ -357,7 +360,8 @@ T+20:00  │ Attacker issues "recon" command
 T+20:30  │ Recon reports received on C&C Server
          │ Attacker analyzes victim data
          │
-T+30:00  │ BotClient detects Defender re-enabled (Strike 1/3)
+T+30:00  │ User turns Windows Defender back online
+         | BotClient detects Defender re-enabled (Strike 1/3)
          │
 T+30:30  │ Defender still active (Strike 2/3)
          │
